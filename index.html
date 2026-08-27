@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>В начале было Слово | Указатели</title>
+    <style>
+        /* Общие стили */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Comic Neue', 'Comic Sans MS', sans-serif;
+            background: #fdf8e7;
+            background-image: radial-gradient(circle at 10% 20%, rgba(218, 178, 115, 0.08) 0%, rgba(0,0,0,0) 50%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .app-container {
+            max-width: 800px;
+            width: 100%;
+            background: #fff6e8;
+            border-radius: 48px;
+            box-shadow: 0 20px 35px rgba(100, 70, 30, 0.15);
+            padding: 30px 30px 40px;
+            border: 1px solid #f0dbb4;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 25px;
+        }
+
+        .header .studio-link {
+            display: inline-block;
+            font-size: 1rem;
+            color: #4A90D9;
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px solid #4A90D9;
+            padding-bottom: 2px;
+            transition: 0.2s;
+        }
+
+        .header .studio-link:hover {
+            color: #2c6aa0;
+            border-bottom-color: #2c6aa0;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            color: #4a3520;
+            margin-top: 8px;
+            margin-bottom: 4px;
+            letter-spacing: 1px;
+        }
+
+        .header .subtitle {
+            font-size: 1rem;
+            color: #7a5a3a;
+            font-weight: 300;
+            line-height: 1.5;
+        }
+
+        /* Шаги */
+        .step {
+            display: none;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        .step h2 {
+            font-size: 1.6rem;
+            color: #4a3520;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .step .instruction {
+            font-size: 1rem;
+            color: #7a5a3a;
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f4ede4;
+            border-radius: 16px;
+        }
+
+        /* Текст для подсветки */
+        .psalm-text {
+            font-size: 1.1rem;
+            line-height: 2.8; /* Увеличенный междустрочный интервал для отметок */
+            color: #3e2c1a;
+            background: #ffffff;
+            padding: 20px 25px;
+            border-radius: 20px;
+            border: 1px solid #e6dacb;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .word-wrapper {
+            display: inline-block;
+            position: relative;
+        }
+
+        .clickable-word {
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 6px;
+            transition: background 0.2s, color 0.2s;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+        }
+
+        .clickable-word:hover {
+            background: #e6dacb;
+        }
+
+        /* Отметка в виде книжки сверху */
+        .word-wrapper .marker {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.3rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 2;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        .word-wrapper .marker.show {
+            opacity: 0.7;
+        }
+
+        /* Счётчик */
+        .counters {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: #f4ede4;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .counters span {
+            color: #b48a62;
+        }
+
+        /* Вопрос (шаг 2) */
+        .question-box {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid #e6dacb;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .question-box p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #3e2c1a;
+        }
+
+        .question-box .answer-hint {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f4ede4;
+            border-radius: 16px;
+            font-weight: 500;
+            color: #b48a62;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .question-box .answer-hint:hover {
+            background: #e6dacb;
+        }
+
+        .question-box .answer-text {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: #c8e6c9;
+            border-radius: 16px;
+            font-weight: 600;
+            color: #1e5a1e;
+        }
+
+        .question-box .answer-text.show {
+            display: block;
+        }
+
+        /* Вывод (шаг 3) */
+        .conclusion-box {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid #e6dacb;
+            margin: 15px 0;
+        }
+
+        .conclusion-box p {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: #3e2c1a;
+        }
+
+        .conclusion-box .final {
+            font-weight: 600;
+            color: #b48a62;
+            font-size: 1.05rem;
+            margin-top: 12px;
+            border-top: 1px solid #f0e6d8;
+            padding-top: 12px;
+        }
+
+        /* Кнопки навигации */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #b48a62;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        button:hover {
+            background: #9a704a;
+            transform: translateY(-2px);
+        }
+
+        button.secondary {
+            background: #e6dacb;
+            color: #4a3520;
+        }
+
+        button.secondary:hover {
+            background: #d5c4b0;
+        }
+
+        /* Футер */
+        .footer {
+            margin-top: 30px;
+            border-top: 1px solid #e6dacb;
+            padding-top: 20px;
+            text-align: center;
+        }
+
+        .footer .studio-link {
+            color: #4A90D9;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            border-bottom: 1px solid #4A90D9;
+            padding-bottom: 2px;
+            transition: 0.2s;
+        }
+
+        .footer .studio-link:hover {
+            color: #2c6aa0;
+            border-bottom-color: #2c6aa0;
+        }
+
+        .footer .small-note {
+            display: block;
+            margin-top: 6px;
+            color: #a58d7a;
+            font-size: 0.8rem;
+        }
+
+        /* Адаптив */
+        @media (max-width: 600px) {
+            .app-container { padding: 20px 15px; }
+            .header h1 { font-size: 1.8rem; }
+            .psalm-text { font-size: 1rem; padding: 15px; line-height: 2.8; }
+            .word-wrapper .marker { font-size: 1.1rem; top: -26px; }
+            .nav-buttons { flex-direction: column; }
+            button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- ШАПКА -->
+        <div class="header">
+            <a href="https://vk.com/ykazateli_of_christ" target="_blank" class="studio-link">
+                🕯️ Библейская студия анимации «Указатели»
+            </a>
+            <h1>📖 В начале было Слово</h1>
+            <p class="subtitle">Индуктивное изучение: наблюдай, размышляй, применяй</p>
+        </div>
+
+        <!-- ШАГ 1: НАБЛЮДЕНИЕ -->
+        <div id="step1" class="step active">
+            <h2>👀 Шаг 1. Наблюдение</h2>
+            <div class="instruction">
+                📖 Нажми на все упоминания <strong>«Слова»</strong> и Его местоимения (Он, Оно, Его, Нём).
+            </div>
+
+            <div class="psalm-text" id="psalmText">
+                <span class="word-wrapper"><span class="clickable-word" data-word="word">Слово</span><span class="marker">📖</span></span>
+                было в начале, и
+                <span class="word-wrapper"><span class="clickable-word" data-word="word">Слово</span><span class="marker">📖</span></span>
+                было у Бога, и
+                <span class="word-wrapper"><span class="clickable-word" data-word="word">Слово</span><span class="marker">📖</span></span>
+                было Бог.
+                <span style="display:block; margin-top: 10px;">
+                <span class="word-wrapper"><span class="clickable-word" data-word="word">Оно</span><span class="marker">📖</span></span>
+                было в начале у Бога.
+                </span>
+                <span style="display:block; margin-top: 10px;">
+                Всё чрез
+                <span class="word-wrapper"><span class="clickable-word" data-word="word">Него</span><span class="marker">📖</span></span>
+                начало быть, и без
+                <span class="word-wrapper"><span class="clickable-word" data-word="word">Него</span><span class="marker">📖</span></span>
+                ничто не начало быть, что начало быть.
+                </span>
+                <span style="display:block; margin-top: 10px;">
+                В
+                <span class="word-wrapper"><span class="clickable-word" data-word="word">Нём</span><span class="marker">📖</span></span>
+                была жизнь, и жизнь была свет для людей.
+                </span>
+                <span style="display:block; margin-top: 20px; border-top: 1px solid #f0e6d8; padding-top: 15px;">
+                И
+                <span class="word-wrapper"><span class="clickable-word" data-word="word">Слово</span><span class="marker">📖</span></span>
+                стало плотью и обитало с нами, полное благодати и истины; и мы видели славу
+                <span class="word-wrapper"><span class="clickable-word" data-word="word">Его</span><span class="marker">📖</span></span>,
+                славу как Единородного от Отца.
+                </span>
+            </div>
+
+            <div class="counters">
+                📖 Найдено: <span id="wordCount">0</span>
+            </div>
+
+            <div class="nav-buttons">
+                <button onclick="goToStep(2)" id="toStep2">➡️ Шаг 2. Размышление</button>
+            </div>
+        </div>
+
+        <!-- ШАГ 2: РАЗМЫШЛЕНИЕ -->
+        <div id="step2" class="step">
+            <h2>🤔 Шаг 2. Размышление</h2>
+            <div class="question-box">
+                <p>
+                    <strong>Кто Этот «Слово», Которое было у Бога, Которое Само было Богом, и Которое стало плотью?</strong>
+                </p>
+                <div class="answer-hint" onclick="toggleAnswer()">
+                    💡 Нажми, чтобы узнать ответ
+                </div>
+                <div class="answer-text" id="answerText">
+                    ✅ Это <strong>Иисус Христос</strong> — Сын Божий, Который пришёл в мир, чтобы открыть нам Отца.
+                </div>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="secondary" onclick="goToStep(1)">⬅️ Назад</button>
+                <button onclick="goToStep(3)">➡️ Шаг 3. Вывод</button>
+            </div>
+        </div>
+
+        <!-- ШАГ 3: ВЫВОД -->
+        <div id="step3" class="step">
+            <h2>🕊️ Шаг 3. Вывод</h2>
+
+            <div class="conclusion-box">
+                <p>
+                    <strong>Иисус Христос — это Слово</strong>, которое было в начале у Бога и Само было Богом.
+                </p>
+                <p style="margin-top: 10px;">
+                    Он пришёл в мир, чтобы <strong>дать нам жизнь</strong> и <strong>открыть истину</strong> о Боге.
+                </p>
+                <p style="margin-top: 10px;">
+                    Как Слово, Он открывает нам волю Отца. Как Свет, Он ведёт нас из тьмы. Как Жизнь, Он наполняет нас Собой.
+                </p>
+            </div>
+
+            <div class="conclusion-box" style="border-left: 4px solid #b48a62;">
+                <p class="final">
+                    ✨ «Слово стало плотию и обитало с нами» (Ин. 1:14).<br>
+                    <span style="font-weight: 400; font-size: 0.95rem; color: #7a5a3a;">
+                        Иисус — не просто учитель, Он — Бог, пришедший к нам, чтобы мы познали Его и имели жизнь вечную.
+                    </span>
+                </p>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="secondary" onclick="goToStep(2)">⬅️ Назад</button>
+                <button onclick="resetAll()">🔄 Пройти заново</button>
+            </div>
+        </div>
+
+        <!-- ФУТЕР -->
+        <div class="footer">
+            <a href="https://vk.com/ykazateli_of_christ" target="_blank" class="studio-link">
+                🕯️ Изучайте Писание вместе с «Указателями»
+            </a>
+            <span class="small-note">Индуктивный метод: наблюдай, размышляй, применяй</span>
+        </div>
+    </div>
+
+    <script>
+        // ============ ЛОГИКА ПОДСВЕТКИ ============
+        const clickableWords = document.querySelectorAll('.clickable-word');
+        const wordCountSpan = document.getElementById('wordCount');
+        let wordCount = 0;
+
+        clickableWords.forEach(word => {
+            word.addEventListener('click', function() {
+                const wrapper = this.parentElement;
+                const marker = wrapper.querySelector('.marker');
+
+                // Если уже подсвечено — убираем отметку
+                if (marker.classList.contains('show')) {
+                    marker.classList.remove('show');
+                    wordCount--;
+                } else {
+                    marker.classList.add('show');
+                    wordCount++;
+                }
+                updateCounter();
+            });
+        });
+
+        function updateCounter() {
+            wordCountSpan.textContent = wordCount;
+        }
+
+        // ============ ОТВЕТ НА ВОПРОС (шаг 2) ============
+        function toggleAnswer() {
+            const answer = document.getElementById('answerText');
+            answer.classList.toggle('show');
+        }
+
+        // ============ НАВИГАЦИЯ ПО ШАГАМ ============
+        function goToStep(stepNumber) {
+            document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+            document.getElementById('step' + stepNumber).classList.add('active');
+            document.querySelector('.app-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function resetAll() {
+            // Сбрасываем отметки
+            document.querySelectorAll('.marker').forEach(m => m.classList.remove('show'));
+            wordCount = 0;
+            updateCounter();
+
+            // Скрываем ответ, если он был открыт
+            document.getElementById('answerText').classList.remove('show');
+
+            // Возвращаемся к шагу 1
+            goToStep(1);
+        }
+    </script>
+</body>
+</html>
